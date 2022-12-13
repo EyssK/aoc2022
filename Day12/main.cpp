@@ -189,12 +189,14 @@ auto main(int argc, char** argv) -> int {
                         // test if p is accessible from previous interesting point
                         if ( map(p) <= (map(pp)+1)) {
                             if (p == E) {
-                                not_found = false;
+                                //not_found = false;
                                 step_found = step;
+                                std::cout << "\x1b[" << p.row <<";" << p.col <<'H';
+                                std::cout << "\x1b[1;97m▓" << std::flush;
                             }
                             else {
                                 dst(p) = step;
-                                display_rainbow(p,dst(p), 490); // 490 is my P1 answer
+                                display_rainbow(p,dst(p), 510); // 490 is my P1 answer
                                 current_points.push_back(p);
                             }
                         }
@@ -202,12 +204,61 @@ auto main(int argc, char** argv) -> int {
                 }
             }
             step++;
+            if (current_points.size() == 0)
+                break;
             previous_points.swap(current_points);
-            std::this_thread::sleep_for(50ms);
+            std::this_thread::sleep_for(20ms);
         }
 
         restore_display();
         std::cout << "P1 " << step_found << std::endl;
+
+        Dst downhill;
+        downhill(E) = 0;
+        // Breadth First Search BFS
+        previous_points = {E};
+        step = 1;
+        not_found = true;
+        step_found = 0;
+        while (not_found) {
+            std::vector<Point> current_points;
+            // continue from previous interesting points
+            for (Point pp : previous_points) {
+                const Point neighbours[4] = {
+                    {pp.row-1,pp.col},
+                    {pp.row+1,pp.col},
+                    {pp.row,pp.col+1},
+                    {pp.row,pp.col-1}};
+                for (Point p : neighbours) {
+                    // test if p not already examined
+                    if (downhill(p) > step) {
+                        // test if p is accessible from previous interesting point
+                        if ( map(pp) <= (map(p)+1)) {
+                            if (map(p) == 'a' && step_found == 0) {
+                                // not_found = false;
+                                step_found = step;
+                                downhill(p) = step;
+                                std::cout << "\x1b[" << p.row <<";" << p.col <<'H';
+                                std::cout << "\x1b[1;97m▓" << std::flush;
+                            }
+                            else {
+                                downhill(p) = step;
+                                display_rainbow(p,downhill(p), 510);
+                                current_points.push_back(p);
+                            }
+                        }
+                    }
+                }
+            }
+            step++;
+            if (current_points.size() == 0)
+                break;
+            previous_points.swap(current_points);
+            std::this_thread::sleep_for(20ms);
+        }
+
+        restore_display();
+        std::cout << std::endl << "P2 " << step_found << std::endl;
     }
     return 0;
 }
